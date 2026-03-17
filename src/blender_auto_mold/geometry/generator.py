@@ -172,6 +172,53 @@ def _register_positions(
     return offsets
 
 
+def _seam_window_bounds(
+    analysis: MeshAnalysisResult,
+    axis_index: int,
+    scene,
+    settings: MoldGenerationSettings,
+) -> tuple[Vector, Vector]:
+    center = (analysis.bbox_min + analysis.bbox_max) * 0.5
+    bbox_min = analysis.bbox_min.copy()
+    bbox_max = analysis.bbox_max.copy()
+    silicone_margin = mm_to_scene(settings.silicone_thickness_mm * 1.1, scene)
+    opening_depth = mm_to_scene(
+        max(settings.flange_height_mm * 1.5, settings.wall_thickness_mm),
+        scene,
+    )
+
+    cutter_min = bbox_min.copy()
+    cutter_max = bbox_max.copy()
+
+    for index in range(3):
+        if index == axis_index:
+            cutter_min[index] = center[index] - opening_depth
+            cutter_max[index] = center[index] + opening_depth
+        else:
+            cutter_min[index] = bbox_min[index] - silicone_margin
+            cutter_max[index] = bbox_max[index] + silicone_margin
+
+    return cutter_min, cutter_max
+
+
+def _open_parting_window(context, halves, analysis, axis_index, settings, collection, warnings):
+    cutter_min, cutter_max = _seam_window_bounds(analysis, axis_index, context.scene, settings)
+    cutter = _create_box(
+        context,
+        "seam_window_tmp",
+        cutter_min,
+        cutter_max,
+        collection,
+    )
+    try:
+        for half in halves:
+            _apply_boolean(context, half, cutter, "DIFFERENCE", "SeamWindow")
+    finally:
+        delete_objects(context, [cutter])
+
+    warnings.append("Opened the parting window so the cavity is exposed at the seam.")
+
+
 def _add_registers(context, top_half, bottom_half, analysis, axis_index, settings, collection, warnings):
     radius = mm_to_scene(settings.register_radius_mm, context.scene)
     depth = mm_to_scene(settings.register_depth_mm, context.scene)
@@ -300,6 +347,15 @@ def generate_two_part_mold(
 
     _apply_boolean(context, top_half, cavity, "DIFFERENCE", "TopCavity")
     _apply_boolean(context, bottom_half, cavity, "DIFFERENCE", "BottomCavity")
+    _open_parting_window(
+        context,
+        (top_half, bottom_half),
+        analysis,
+        axis_index,
+        settings,
+        temp_collection,
+        warnings,
+    )
 
     _add_registers(context, top_half, bottom_half, analysis, axis_index, settings, temp_collection, warnings)
     _add_clamp_holes(context, (top_half, bottom_half), analysis, axis_index, settings, temp_collection, warnings)
