@@ -2,7 +2,7 @@
 
 bl_info = {
     "name": "Auto Mold Generator",
-    "author": "OpenAI Codex",
+    "author": "Mauricio van der Maesen de Sombreff (+Codex)",
     "version": (0, 1, 0),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Auto Mold",
