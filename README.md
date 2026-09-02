@@ -1,5 +1,15 @@
 # mold-generator-blender-addon
 
+STATUS: NEEDS WORK — this is an actively-developed, in-progress add-on
+(Phase 1 of 3 planned phases), not a finished/polished release. It works for
+its declared Phase 1 scope (clean, closed meshes) but is explicitly not yet
+handling the harder cases (severe undercuts, multi-part decomposition) that
+would make it broadly usable. See "Current limitations" below (from the
+original README) for the honest current gaps.
+
+This is a stand-alone project, unrelated to the serial/hardware-control or
+RobStride/CAN lineages elsewhere in this account.
+
 Blender add-on project for generating casting mold systems from mesh objects.
 
 ## Objective
@@ -83,6 +93,23 @@ Current limitations:
 
 To install it in Blender, package the contents of `src/` so the add-on archive contains the `blender_auto_mold/` folder at the archive root.
 
+## Blender version compatibility
+
+`bl_info` in `src/blender_auto_mold/__init__.py` declares
+`"blender": (4, 2, 0)`. Uses standard Blender 4.x mesh/bmesh/boolean-modifier
+APIs; no legacy pre-4.0 calls. Requires Blender 4.2+.
+
+## Install
+
+1. Clone or download this repo.
+2. Zip the contents of `src/` so that `blender_auto_mold/` sits at the root
+   of the zip (i.e. `blender_auto_mold/__init__.py`, not
+   `src/blender_auto_mold/__init__.py`).
+3. In Blender: Edit > Preferences > Add-ons > Install..., select the zip,
+   enable "Auto Mold Generator".
+4. Select a mesh object, open View3D > Sidebar > Auto Mold, run
+   "Generate Mold".
+
 ## Usage
 
 1. Enable the add-on in Blender.
@@ -99,3 +126,8 @@ Generated halves are written to `Mold_Output`. The source object is preserved. W
 - Use `docs/skills_design.md` to understand which skill should handle a task.
 - Keep new guidance specific, phase-aware, and tied to actual repo files.
 - Do not broaden Phase 1 scope silently when documenting or implementing new workflows.
+
+## License
+
+MIT (no license was declared in the original repo; added as the account's
+default choice — see `LICENSE`).
